@@ -69,7 +69,6 @@ pub enum AuthorizationInfo {
 pub struct GroupInfo {
     pub group: PermissionGroup,
     pub description: &'static str,
-    pub permissions: Vec<PermissionInfo>,
 }
 
 #[derive(Debug, serde::Serialize, Clone)]
