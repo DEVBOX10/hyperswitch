@@ -218,6 +218,7 @@ default_imp_for_session_update!(
     connectors::Taxjar,
     connectors::Mollie,
     connectors::Multisafepay,
+    connectors::Nomupay,
     connectors::Novalnet,
     connectors::Nexinets,
     connectors::Nexixpay,
