@@ -3,9 +3,9 @@ use hyperswitch_domain_models::{
     router_flow_types::{AccessTokenAuth, Capture, PSync, PreProcessing, Void},
     router_request_types::{
         AccessTokenRequestData, PaymentsCancelData, PaymentsCaptureData, PaymentsPreProcessingData,
-        PaymentsSyncData, RefundsData,
+        PaymentsSyncData, PayoutsData, RefundsData,
     },
-    router_response_types::{PaymentsResponseData, RefundsResponseData},
+    router_response_types::{PaymentsResponseData, PayoutsResponseData, RefundsResponseData},
 };
 
 pub(crate) type PaymentsSyncResponseRouterData<R> =
@@ -24,6 +24,10 @@ pub(crate) type PaymentsPreprocessingResponseRouterData<R> =
     ResponseRouterData<PreProcessing, R, PaymentsPreProcessingData, PaymentsResponseData>;
 
 // TODO: Remove `ResponseRouterData` from router crate after all the related type aliases are moved to this crate.
+#[cfg(feature = "payouts")]
+pub type PayoutsResponseRouterData<F, R> =
+    ResponseRouterData<F, R, PayoutsData, PayoutsResponseData>;
+
 pub struct ResponseRouterData<Flow, R, Request, Response> {
     pub response: R,
     pub data: RouterData<Flow, Request, Response>,
