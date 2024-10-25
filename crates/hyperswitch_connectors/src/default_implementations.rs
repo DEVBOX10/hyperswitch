@@ -1224,7 +1224,7 @@ default_imp_for_payouts_fulfill!(
     connectors::Forte,
     connectors::Globepay,
     connectors::Helcim,
-    connectors::Nomupay,
+    // connectors::Nomupay,
     connectors::Novalnet,
     connectors::Nexinets,
     connectors::Nexixpay,
