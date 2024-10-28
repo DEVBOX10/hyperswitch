@@ -12,7 +12,7 @@ use crate::{enums as storage_enums, schema::dispute};
 pub struct DisputeNew {
     pub dispute_id: String,
     pub amount: String,
-    pub currency: String,
+    pub currency: storage_enums::Currency,
     pub dispute_stage: storage_enums::DisputeStage,
     pub dispute_status: storage_enums::DisputeStatus,
     pub payment_id: common_utils::id_type::PaymentId,
@@ -38,7 +38,7 @@ pub struct DisputeNew {
 pub struct Dispute {
     pub dispute_id: String,
     pub amount: String,
-    pub currency: String,
+    pub currency: storage_enums::Currency,
     pub dispute_stage: storage_enums::DisputeStage,
     pub dispute_status: storage_enums::DisputeStatus,
     pub payment_id: common_utils::id_type::PaymentId,

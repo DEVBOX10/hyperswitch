@@ -2432,7 +2432,7 @@ impl api::IncomingWebhook for Stripe {
                     field_name: "amount",
                 })?
                 .to_string(),
-            currency: details.event_data.event_object.currency,
+            currency: connector_utils::string_to_currency(details.event_data.event_object.currency),
             dispute_stage: api_models::enums::DisputeStage::Dispute,
             connector_dispute_id: details.event_data.event_object.id,
             connector_reason: details.event_data.event_object.reason,

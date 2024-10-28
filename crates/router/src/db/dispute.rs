@@ -310,7 +310,7 @@ impl DisputeInterface for MockDb {
                         .map_or(true, |currencies| {
                             currencies
                                 .iter()
-                                .any(|currency| dispute.currency.as_str() == currency.to_string())
+                                .any(|currency| &dispute.currency == currency)
                         })
                     && dispute_constraints
                         .time_range
@@ -483,7 +483,7 @@ mod tests {
             DisputeNew {
                 dispute_id: dispute_ids.dispute_id,
                 amount: "amount".into(),
-                currency: "currency".into(),
+                currency: common_enums::Currency::USD,
                 dispute_stage: DisputeStage::Dispute,
                 dispute_status: DisputeStatus::DisputeOpened,
                 payment_id: dispute_ids.payment_id,

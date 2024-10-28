@@ -9,7 +9,7 @@ use crate::types::storage::dispute::Dispute;
 pub struct KafkaDispute<'a> {
     pub dispute_id: &'a String,
     pub dispute_amount: i64,
-    pub currency: &'a String,
+    pub currency: &'a storage_enums::Currency,
     pub dispute_stage: &'a storage_enums::DisputeStage,
     pub dispute_status: &'a storage_enums::DisputeStatus,
     pub payment_id: &'a id_type::PaymentId,

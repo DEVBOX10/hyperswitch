@@ -1006,7 +1006,7 @@ impl api::IncomingWebhook for Braintree {
                         dispute_data.amount_disputed.to_string(),
                         currency,
                     )?,
-                    currency: dispute_data.currency_iso_code,
+                    currency: connector_utils::string_to_currency(dispute_data.currency_iso_code),
                     dispute_stage: transformers::get_dispute_stage(dispute_data.kind.as_str())?,
                     connector_dispute_id: dispute_data.id,
                     connector_reason: dispute_data.reason,

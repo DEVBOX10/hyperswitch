@@ -990,7 +990,7 @@ impl api::IncomingWebhook for Trustpay {
             .ok_or(errors::ConnectorError::WebhookReferenceIdNotFound)?;
         Ok(api::disputes::DisputePayload {
             amount: payment_info.amount.amount.to_string(),
-            currency: payment_info.amount.currency,
+            currency: connector_utils::string_to_currency(payment_info.amount.currency),
             dispute_stage: api_models::enums::DisputeStage::Dispute,
             connector_dispute_id,
             connector_reason: reason.reason.reject_reason,
