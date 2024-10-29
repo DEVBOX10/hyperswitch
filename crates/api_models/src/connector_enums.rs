@@ -92,6 +92,7 @@ pub enum Connector {
     Nexinets,
     Nexixpay,
     Nmi,
+    Nomupay,
     Noon,
     Novalnet,
     Nuvei,
