@@ -1397,6 +1397,7 @@ pub trait PaymentsSetupMandateRequestData {
     fn get_browser_info(&self) -> Result<BrowserInformation, Error>;
     fn get_email(&self) -> Result<Email, Error>;
     fn is_card(&self) -> bool;
+    fn get_return_url(&self) -> Result<String, Error>;
 }
 
 impl PaymentsSetupMandateRequestData for SetupMandateRequestData {
@@ -1410,6 +1411,11 @@ impl PaymentsSetupMandateRequestData for SetupMandateRequestData {
     }
     fn is_card(&self) -> bool {
         matches!(self.payment_method_data, PaymentMethodData::Card(_))
+    }
+    fn get_return_url(&self) -> Result<String, Error> {
+        self.return_url
+            .clone()
+            .ok_or_else(missing_field_err("return_url"))
     }
 }
 

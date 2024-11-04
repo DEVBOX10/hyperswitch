@@ -328,7 +328,7 @@ fn get_payment_method_for_wallet(
         ))),
         WalletData::ApplePay(applepay_wallet_data) => Ok(MolliePaymentMethodData::Applepay(
             Box::new(ApplePayMethodData {
-                apple_pay_payment_token: Secret::new(applepay_wallet_data.payment_data.to_owned()),
+                apple_pay_payment_token: Secret::new(applepay_wallet_data.payment_data.to_owned()), //
             }),
         )),
         _ => Err(errors::ConnectorError::NotImplemented("Payment Method".to_string()).into()),

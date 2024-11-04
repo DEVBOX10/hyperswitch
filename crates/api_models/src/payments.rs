@@ -5466,7 +5466,7 @@ pub struct ApplepayConnectorMetadataRequest {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct ApplepaySessionTokenData {
+pub struct ApplepaySessionTokenData {//
     pub apple_pay: ApplePayMetadata,
 }
 

@@ -2210,6 +2210,8 @@ where
     .await?;
     *payment_data = pd;
 
+    println!("<<>>tokenization {:?}",tokenization_action);
+
     // Validating the blocklist guard and generate the fingerprint
     blocklist_guard(state, merchant_account, key_store, operation, payment_data).await?;
 
@@ -3423,7 +3425,7 @@ async fn decide_payment_method_tokenize_action(
             None => Ok(match (is_connector_tokenization_enabled, apple_pay_flow) {
                 (true, Some(domain::ApplePayFlow::Simplified(payment_processing_details))) => {
                     TokenizationAction::TokenizeInConnectorAndApplepayPreDecrypt(
-                        payment_processing_details,
+                        payment_processing_details, //
                     )
                 }
                 (true, _) => TokenizationAction::TokenizeInConnectorAndRouter,
@@ -3558,7 +3560,7 @@ where
 
             let apple_pay_flow =
                 decide_apple_pay_flow(state, payment_method_type, Some(merchant_connector_account));
-
+            println!("<<>>applepay flow {:?}",apple_pay_flow);
             let is_connector_tokenization_enabled =
                 is_payment_method_tokenization_enabled_for_connector(
                     state,
@@ -3584,6 +3586,7 @@ where
                 *payment_method_type,
             )
             .await?;
+        println!("<<>>payment_method_action  {:?}",payment_method_action);
 
             let connector_tokenization_action = match payment_method_action {
                 TokenizationAction::TokenizeInRouter => {

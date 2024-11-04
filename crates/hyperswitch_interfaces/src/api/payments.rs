@@ -54,6 +54,7 @@ pub trait PaymentSession:
 pub trait MandateSetup:
     api::ConnectorIntegration<SetupMandate, SetupMandateRequestData, PaymentsResponseData>
 {
+    
 }
 
 /// trait PaymentAuthorize
