@@ -11,7 +11,6 @@ use hyperswitch_domain_models::{
 use super::ConnectorCommon;
 use crate::api::ConnectorIntegration;
 
-
 /// trait PayoutCancel
 pub trait PayoutCancel: ConnectorIntegration<PoCancel, PayoutsData, PayoutsResponseData> {}
 

@@ -250,15 +250,15 @@ pub struct NomupayMetadata {
     pub private_key: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct NomupayErrorType {
     pub field: String,
     pub message: String,
 }
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct NomupayError {
+pub struct NomupayErrorResponse {
     pub error_code: String,
     pub error_description: Option<String>,
     pub validation_errors: Option<Vec<NomupayErrorType>>,
@@ -363,8 +363,8 @@ impl<F, T> TryFrom<ResponseRouterData<F, NomupayPaymentsResponse, T, PaymentsRes
             status: common_enums::AttemptStatus::from(item.response.status),
             response: Ok(PaymentsResponseData::TransactionResponse {
                 resource_id: ResponseId::ConnectorTransactionId(item.response.id),
-                redirection_data: None,
-                mandate_reference: None,
+                redirection_data: Box::new(None),
+                mandate_reference: Box::new(None),
                 connector_metadata: None,
                 network_txn_id: None,
                 connector_response_reference_id: None,
@@ -452,14 +452,14 @@ impl TryFrom<RefundsResponseRouterData<RSync, RefundResponse>> for RefundsRouter
     }
 }
 
-//TODO: Fill the struct with respective fields
-#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
-pub struct NomupayErrorResponse {
-    pub status_code: u16,
-    pub code: String,
-    pub message: String,
-    pub reason: Option<String>,
-}
+// //TODO: Fill the struct with respective fields
+// #[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
+// pub struct NomupayErrorResponse {
+//     pub status_code: u16,
+//     pub code: String,
+//     pub message: String,
+//     pub reason: Option<String>,
+// }
 
 // PoRecipient Request
 impl<F> TryFrom<&PayoutsRouterData<F>> for OnboardSubAccountRequest {
@@ -501,8 +501,8 @@ impl<F> TryFrom<&PayoutsRouterData<F>> for OnboardSubAccountRequest {
             last_name: item
                 .get_billing_last_name()
                 .unwrap_or(Secret::new("last name".to_string())),
-            date_of_birth: "unknown".to_string(),
-            gender: "unknown".to_string(),
+            date_of_birth: "1991-01-01".to_string(), // need help
+            gender: "Other".to_string(),
             email_address: item.get_billing_email()?,
             phone_number_country_code: item
                 .get_billing_phone()
@@ -514,17 +514,19 @@ impl<F> TryFrom<&PayoutsRouterData<F>> for OnboardSubAccountRequest {
             address: my_address,
         };
 
-        let source_id = match item.connector_auth_type.to_owned() {
-            ConnectorAuthType::BodyKey { api_key: _, key1 } => Ok(key1),
-            _ => Err(errors::ConnectorError::MissingRequiredField {
-                field_name: "source_id for PayoutRecipient creation",
-            }),
-        }?;
+        // let source_id = match item.connector_auth_type.to_owned() {
+        //     ConnectorAuthType::BodyKey { api_key: _, key1 } => Ok(key1),
+        //     _ => Err(errors::ConnectorError::MissingRequiredField {
+        //         field_name: "source_id for PayoutRecipient creation",
+        //     }),
+        // }?;
+
+        let source_id = NomupayAuthType::try_from(&item.connector_auth_type)?;
 
         match payout_type {
-            Some(common_enums::PayoutType::Bank) => Ok(OnboardSubAccountRequest {
-                account_id: source_id,                              //need help
-                client_sub_account_id: "how to get it".to_string(), //need help
+            Some(common_enums::PayoutType::Bank) => Ok(Self {
+                account_id: source_id.eid,                       
+                client_sub_account_id: request.payout_id, // need help
                 profile,
             }),
             _ => Err(errors::ConnectorError::NotImplemented(
@@ -608,8 +610,8 @@ impl<F> TryFrom<&PayoutsRouterData<F>> for OnboardTransferMethodRequest {
                         last_name: item
                             .get_billing_last_name()
                             .unwrap_or(Secret::new("last name".to_string())),
-                        date_of_birth: "unknown".to_string(),
-                        gender: "unknown".to_string(),
+                        date_of_birth: "1991-01-01".to_string(),
+                        gender: "Other".to_string(),
                         email_address: item.get_billing_email()?,
                         phone_number_country_code: item
                             .get_billing_phone()

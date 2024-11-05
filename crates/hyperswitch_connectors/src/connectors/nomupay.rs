@@ -325,14 +325,40 @@ impl ConnectorCommon for Nomupay {
         event_builder.map(|i| i.set_response_body(&response));
         router_env::logger::info!(connector_response=?response);
 
-        Ok(ErrorResponse {
-            status_code: res.status_code,
-            code: response.code,
-            message: response.message,
-            reason: response.reason,
-            attempt_status: None,
-            connector_transaction_id: None,
-        })
+        match response.validation_errors {
+            Some(errs)=>{
+                if let Some(e) = errs.first(){
+                    Ok(ErrorResponse {
+                        status_code: res.status_code,
+                        code: response.error_code,
+                        message: e.field.clone(),
+                        reason:Some( e.message.clone(),),
+                        attempt_status: None,
+                        connector_transaction_id: None,
+                    })
+                }
+                else{
+                    Ok(ErrorResponse {
+                        status_code: res.status_code,
+                        code: response.error_code.clone(),
+                        message: response.error_code.clone(),
+                        reason: None,
+                        attempt_status: None,
+                        connector_transaction_id: None,
+                    })
+                }
+                
+            }
+            _ => Ok(ErrorResponse {
+                status_code: res.status_code,
+                code: response.error_code,
+                message: response.error_description.unwrap_or_default().to_string(),
+                reason: None,
+                attempt_status: None,
+                connector_transaction_id: None,
+            })
+        }
+        
     }
 }
 
