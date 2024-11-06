@@ -140,6 +140,7 @@ impl From<Flow> for ApiIdentifier {
             | Flow::PaymentsConfirmIntent
             | Flow::PaymentsCreateIntent
             | Flow::PaymentsGetIntent
+            | Flow::PaymentsUpdateIntent
             | Flow::PaymentsPostSessionTokens => Self::Payments,
 
             Flow::PayoutsCreate

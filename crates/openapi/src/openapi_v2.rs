@@ -124,6 +124,7 @@ Never share your secret api keys. Keep them guarded and secure.
         //Routes for payments
         routes::payments::payments_create_intent,
         routes::payments::payments_get_intent,
+        routes::payments::payments_update_intent,
         routes::payments::payments_confirm_intent,
 
         //Routes for refunds
@@ -326,6 +327,7 @@ Never share your secret api keys. Keep them guarded and secure.
         api_models::payments::PaymentsSessionRequest,
         api_models::payments::PaymentsSessionResponse,
         api_models::payments::PaymentsCreateIntentRequest,
+        api_models::payments::PaymentsUpdateIntentRequest,
         api_models::payments::PaymentsIntentResponse,
         api_models::payments::PazeWalletData,
         api_models::payments::AmountDetails,
