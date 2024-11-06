@@ -55,7 +55,7 @@ use masking::{ExposeInterface, Mask};
 use serde_json::json;
 use transformers as nomupay;
 
-use crate::{constants::headers, types::ResponseRouterData, utils};
+use crate::{constants::headers, types::ResponseRouterData, utils::{self, RouterData as RouterDataTrait}};
 
 #[derive(Clone)]
 pub struct Nomupay {
@@ -569,11 +569,12 @@ impl ConnectorIntegration<PoRecipientAccount, PayoutsData, PayoutsResponseData> 
         let auth = nomupay::NomupayAuthType::try_from(&req.connector_auth_type)
             .change_context(errors::ConnectorError::FailedToObtainAuthType)?;
 
-        let sid = req
-            .request
-            .connector_payout_id
-            .to_owned()
-            .ok_or(errors::ConnectorError::MissingRequiredField { field_name: "id" })?;
+        // let sid = req
+        //     .request
+        //     .connector_payout_id
+        //     .to_owned()
+        //     .ok_or(errors::ConnectorError::MissingRequiredField { field_name: "id" })?;
+        let sid = req.get_connector_customer_id()?;
 
         let sign = get_signature(
             req.connector_meta_data.to_owned(),
