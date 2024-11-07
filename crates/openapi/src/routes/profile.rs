@@ -210,7 +210,7 @@ pub async fn profile_update() {}
 /// Activates a routing algorithm under a profile
 #[utoipa::path(
     patch,
-    path = "/v2/profiles/{profile_id}/activate_routing_algorithm",
+    path = "/v2/profiles/{profile_id}/activate-routing-algorithm",
     request_body ( content = RoutingAlgorithmId,
       examples(  (
             "Activate a routing algorithm" = (
@@ -240,7 +240,7 @@ pub async fn routing_link_config() {}
 /// Deactivates a routing algorithm under a profile
 #[utoipa::path(
     patch,
-    path = "/v2/profiles/{profile_id}/deactivate_routing_algorithm",
+    path = "/v2/profiles/{profile_id}/deactivate-routing-algorithm",
     params(
         ("profile_id" = String, Path, description = "The unique identifier for the profile"),
     ),
@@ -263,7 +263,7 @@ pub async fn routing_unlink_config() {}
 /// Update the default fallback routing algorithm for the profile
 #[utoipa::path(
     patch,
-    path = "/v2/profiles/{profile_id}/fallback_routing",
+    path = "/v2/profiles/{profile_id}/fallback-routing",
     request_body = Vec<RoutableConnectorChoice>,
     params(
         ("profile_id" = String, Path, description = "The unique identifier for the profile"),
@@ -307,11 +307,11 @@ pub async fn profile_retrieve() {}
 
 #[cfg(feature = "v2")]
 /// Profile - Retrieve Active Routing Algorithm
-///
+///_
 /// Retrieve active routing algorithm under the profile
 #[utoipa::path(
     get,
-    path = "/v2/profiles/{profile_id}/routing_algorithm",
+    path = "/v2/profiles/{profile_id}/routing-algorithm",
     params(
         ("profile_id" = String, Path, description = "The unique identifier for the profile"),
         ("limit" = Option<u16>, Query, description = "The number of records of the algorithms to be returned"),
@@ -334,7 +334,7 @@ pub async fn routing_retrieve_linked_config() {}
 /// Retrieve the default fallback routing algorithm for the profile
 #[utoipa::path(
     get,
-    path = "/v2/profiles/{profile_id}/fallback_routing",
+    path = "/v2/profiles/{profile_id}/fallback-routing",
     params(
         ("profile_id" = String, Path, description = "The unique identifier for the profile"),
     ),
@@ -353,7 +353,7 @@ pub async fn routing_retrieve_default_config() {}
 /// List Merchant Connector Details for the business profile
 #[utoipa::path(
     get,
-    path = "/v2/profiles/{profile_id}/connector_accounts",
+    path = "/v2/profiles/{profile_id}/connector-accounts",
     params(
         ("profile_id" = String, Path, description = "The unique identifier for the business profile"),
         (

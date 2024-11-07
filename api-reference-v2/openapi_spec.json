@@ -164,7 +164,7 @@
         ]
       }
     },
-    "/v2/organization/{id}/merchant_accounts": {
+    "/v2/organization/{id}/merchant-accounts": {
       "get": {
         "tags": [
           "Organization"
@@ -208,7 +208,7 @@
         ]
       }
     },
-    "/v2/connector_accounts": {
+    "/v2/connector-accounts": {
       "post": {
         "tags": [
           "Merchant Connector Account"
@@ -285,7 +285,7 @@
         ]
       }
     },
-    "/v2/connector_accounts/{id}": {
+    "/v2/connector-accounts/{id}": {
       "get": {
         "tags": [
           "Merchant Connector Account"
@@ -445,7 +445,7 @@
         ]
       }
     },
-    "/v2/merchant_accounts": {
+    "/v2/merchant-accounts": {
       "post": {
         "tags": [
           "Merchant Account"
@@ -524,7 +524,7 @@
         ]
       }
     },
-    "/v2/merchant_accounts/{id}": {
+    "/v2/merchant-accounts/{id}": {
       "get": {
         "tags": [
           "Merchant Account"
@@ -630,7 +630,7 @@
         ]
       }
     },
-    "/v2/merchant_accounts/{account_id}/profiles": {
+    "/v2/merchant-accounts/{account_id}/profiles": {
       "get": {
         "tags": [
           "Merchant Account"
@@ -896,7 +896,7 @@
         ]
       }
     },
-    "/v2/profiles/{profile_id}/connector_accounts": {
+    "/v2/profiles/{profile_id}/connector-accounts": {
       "get": {
         "tags": [
           "Business Profile"
@@ -955,7 +955,7 @@
         ]
       }
     },
-    "/v2/profiles/{profile_id}/activate_routing_algorithm": {
+    "/v2/profiles/{profile_id}/activate-routing-algorithm": {
       "patch": {
         "tags": [
           "Profile"
@@ -1022,7 +1022,7 @@
         ]
       }
     },
-    "/v2/profiles/{profile_id}/deactivate_routing_algorithm": {
+    "/v2/profiles/{profile_id}/deactivate-routing-algorithm": {
       "patch": {
         "tags": [
           "Profile"
@@ -1075,7 +1075,7 @@
         ]
       }
     },
-    "/v2/profiles/{profile_id}/fallback_routing": {
+    "/v2/profiles/{profile_id}/fallback-routing": {
       "patch": {
         "tags": [
           "Profile"
@@ -1186,13 +1186,13 @@
         ]
       }
     },
-    "/v2/profiles/{profile_id}/routing_algorithm": {
+    "/v2/profiles/{profile_id}/routing-algorithm": {
       "get": {
         "tags": [
           "Profile"
         ],
         "summary": "Profile - Retrieve Active Routing Algorithm",
-        "description": "Retrieve active routing algorithm under the profile",
+        "description": "_\nRetrieve active routing algorithm under the profile",
         "operationId": "Retrieve the active routing algorithm under the profile",
         "parameters": [
           {
@@ -1260,7 +1260,7 @@
         ]
       }
     },
-    "/v2/routing_algorithm": {
+    "/v2/routing-algorithm": {
       "post": {
         "tags": [
           "Routing"
@@ -1315,7 +1315,7 @@
         ]
       }
     },
-    "/v2/routing_algorithm/{routing_algorithm_id}": {
+    "/v2/routing-algorithm/{routing_algorithm_id}": {
       "get": {
         "tags": [
           "Routing"
@@ -1365,7 +1365,7 @@
         ]
       }
     },
-    "/v2/api_keys": {
+    "/v2/api-keys": {
       "post": {
         "tags": [
           "API Key"
@@ -1405,7 +1405,7 @@
         ]
       }
     },
-    "/v2/api_keys/{key_id}": {
+    "/v2/api-keys/{key_id}": {
       "get": {
         "tags": [
           "API Key"
@@ -1534,7 +1534,7 @@
         ]
       }
     },
-    "/v2/api_keys/list": {
+    "/v2/api-keys/list": {
       "get": {
         "tags": [
           "API Key"
@@ -11078,14 +11078,17 @@
         ],
         "properties": {
           "organization_name": {
-            "type": "string"
+            "type": "string",
+            "description": "Name of the organization"
           },
           "organization_details": {
             "type": "object",
+            "description": "Details about the organization",
             "nullable": true
           },
           "metadata": {
             "type": "object",
+            "description": "Metadata is useful for storing additional, unstructured information on an object.",
             "nullable": true
           }
         },
@@ -11094,27 +11097,31 @@
       "OrganizationResponse": {
         "type": "object",
         "required": [
-          "organization_id",
+          "id",
           "modified_at",
           "created_at"
         ],
         "properties": {
-          "organization_id": {
+          "id": {
             "type": "string",
+            "description": "The unique identifier for the Organization",
             "example": "org_q98uSGAYbjEwqs0mJwnz",
             "maxLength": 64,
             "minLength": 1
           },
           "organization_name": {
             "type": "string",
+            "description": "Name of the Organization",
             "nullable": true
           },
           "organization_details": {
             "type": "object",
+            "description": "Details about the organization",
             "nullable": true
           },
           "metadata": {
             "type": "object",
+            "description": "Metadata is useful for storing additional, unstructured information on an object.",
             "nullable": true
           },
           "modified_at": {
@@ -11132,14 +11139,17 @@
         "properties": {
           "organization_name": {
             "type": "string",
+            "description": "Name of the organization",
             "nullable": true
           },
           "organization_details": {
             "type": "object",
+            "description": "Details about the organization",
             "nullable": true
           },
           "metadata": {
             "type": "object",
+            "description": "Metadata is useful for storing additional, unstructured information on an object.",
             "nullable": true
           }
         },
