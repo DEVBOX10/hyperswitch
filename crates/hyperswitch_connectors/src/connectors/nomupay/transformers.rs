@@ -252,16 +252,58 @@ pub struct NomupayMetadata {
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct NomupayErrorType {
+pub struct NomupayError1{
+    pub error_code: String,
+    pub error_description: String,
+}
+
+#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct NomupayErrorType1 {
+    pub error: NomupayError1
+}
+
+#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct ValidationError {
     pub field: String,
     pub message: String,
 }
+
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct NomupayErrorResponse {
+pub struct NomupayError2{
     pub error_code: String,
-    pub error_description: Option<String>,
-    pub validation_errors: Option<Vec<NomupayErrorType>>,
+    pub validation_errors: Vec<ValidationError>,
+}
+
+#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct NomupayErrorType2 {
+    pub error: NomupayError2,
+}
+
+#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct DetailsType{
+    pub loc: Vec<String>,
+    #[serde(rename = "type")]
+    pub typee: String,
+}
+
+#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct NomupayErrorType3 {
+    pub status_code: i64,
+    pub detail: Vec<DetailsType>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[serde(untagged)]
+pub enum NomupayErrorResponse {
+    NomupayErrorType1(NomupayErrorType1),
+    NomupayErrorType2(NomupayErrorType2),
+    NomupayErrorType3(NomupayErrorType3),
 }
 
 impl TryFrom<&NomupayRouterData<&PaymentsAuthorizeRouterData>> for NomupayPaymentsRequest {
@@ -573,7 +615,6 @@ impl<F> TryFrom<&PayoutsRouterData<F>> for OnboardTransferMethodRequest {
                         account_id: bank_details.iban,
                         account_purpose: bank_details.bank_name, // savings or somthing else need help
                     };
-
                     // let request = item.request.to_owned();
                     // let payout_type = request.payout_type;
                     // let external_id = item.connector_request_reference_id.to_owned();
@@ -657,7 +698,8 @@ impl<F> TryFrom<PayoutsResponseRouterData<F, OnboardTransferMethodResponse>>
         Ok(Self {
             response: Ok(PayoutsResponseData {
                 status: Some(PayoutStatus::RequiresCreation),
-                connector_payout_id: item.data.request.connector_payout_id.clone(),
+                // connector_payout_id: item.data.request.connector_payout_id.clone(),
+                connector_payout_id: Some(item.response.id),
                 payout_eligible: None,
                 should_add_next_step_to_process_tracker: false,
                 error_code: None,
@@ -704,7 +746,8 @@ impl<F> TryFrom<PayoutsResponseRouterData<F, PaymentResponse>> for PayoutsRouter
         Ok(Self {
             response: Ok(PayoutsResponseData {
                 status: Some(PayoutStatus::from(response.status)),
-                connector_payout_id: item.data.request.connector_payout_id.clone(),
+                // connector_payout_id: item.data.request.connector_payout_id.clone(),
+                connector_payout_id: Some(response.id),
                 payout_eligible: None,
                 should_add_next_step_to_process_tracker: false,
                 error_code: None,

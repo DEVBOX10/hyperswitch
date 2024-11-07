@@ -317,6 +317,8 @@ impl ConnectorCommon for Nomupay {
         res: Response,
         event_builder: Option<&mut ConnectorEvent>,
     ) -> CustomResult<ErrorResponse, errors::ConnectorError> {
+
+        println!("eeeeeeeeeeeeeeeeeeee{:?}", res);
         let response: nomupay::NomupayErrorResponse = res
             .response
             .parse_struct("NomupayErrorResponse")
@@ -325,38 +327,37 @@ impl ConnectorCommon for Nomupay {
         event_builder.map(|i| i.set_response_body(&response));
         router_env::logger::info!(connector_response=?response);
 
-        match response.validation_errors {
-            Some(errs)=>{
-                if let Some(e) = errs.first(){
-                    Ok(ErrorResponse {
-                        status_code: res.status_code,
-                        code: response.error_code,
-                        message: e.field.clone(),
-                        reason:Some( e.message.clone(),),
-                        attempt_status: None,
-                        connector_transaction_id: None,
-                    })
-                }
-                else{
-                    Ok(ErrorResponse {
-                        status_code: res.status_code,
-                        code: response.error_code.clone(),
-                        message: response.error_code.clone(),
-                        reason: None,
-                        attempt_status: None,
-                        connector_transaction_id: None,
-                    })
-                }
-                
+        match response{ 
+            nomupay::NomupayErrorResponse::NomupayErrorType1(err)=>{
+                Ok(ErrorResponse {
+                    status_code: res.status_code,
+                    code: err.error.error_code,
+                    message: err.error.error_description,
+                    reason: None,
+                    attempt_status: None,
+                    connector_transaction_id: None,
+                })
+            },
+            nomupay::NomupayErrorResponse::NomupayErrorType2(err)=>{
+                Ok(ErrorResponse {
+                    status_code: res.status_code,
+                    code: err.error.error_code,
+                    message: err.error.validation_errors[0].message.clone(),
+                    reason: Some(err.error.validation_errors[0].field.clone()),
+                    attempt_status: None,
+                    connector_transaction_id: None,
+                })
+            },
+            nomupay::NomupayErrorResponse::NomupayErrorType3(err)=>{
+                Ok(ErrorResponse {
+                    status_code: res.status_code,
+                    code: err.status_code.to_string(),
+                    message: err.detail[0].typee.clone(),
+                    reason: None,
+                    attempt_status: None,
+                    connector_transaction_id: None,
+                })
             }
-            _ => Ok(ErrorResponse {
-                status_code: res.status_code,
-                code: response.error_code,
-                message: response.error_description.unwrap_or_default().to_string(),
-                reason: None,
-                attempt_status: None,
-                connector_transaction_id: None,
-            })
         }
         
     }
@@ -531,11 +532,12 @@ impl ConnectorIntegration<PoRecipientAccount, PayoutsData, PayoutsResponseData> 
         req: &PayoutsRouterData<PoRecipientAccount>,
         connectors: &Connectors,
     ) -> CustomResult<String, errors::ConnectorError> {
-        let sid = req
-            .request
-            .connector_payout_id
-            .to_owned()
-            .ok_or(errors::ConnectorError::MissingRequiredField { field_name: "id" })?;
+        // let sid = req
+        //     .request
+        //     .connector_payout_id
+        //     .to_owned()
+        //     .ok_or(errors::ConnectorError::MissingRequiredField { field_name: "id" })?;
+        let sid = req.get_connector_customer_id()?;
 
         Ok(format!(
             "{}/v1alpha1/sub-account/{}/transfer-method",

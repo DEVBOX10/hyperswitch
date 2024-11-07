@@ -1971,8 +1971,9 @@ pub async fn complete_create_recipient_disburse_account(
     payout_data: &mut PayoutData,
 ) -> RouterResult<()> {
     if !payout_data.should_terminate
-        && payout_data.payout_attempt.status
-            == storage_enums::PayoutStatus::RequiresVendorAccountCreation
+        && matches!( payout_data.payout_attempt.status, storage_enums::PayoutStatus::RequiresVendorAccountCreation 
+            | storage_enums::PayoutStatus::RequiresCreation
+        )
         && connector_data
             .connector_name
             .supports_vendor_disburse_account_create_for_payout()
