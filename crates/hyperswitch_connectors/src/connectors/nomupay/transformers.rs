@@ -189,7 +189,7 @@ pub struct OnboardTransferMethodResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct PaymentResponse {
+pub struct NomupayPaymentResponse {
     pub id: String,
     pub status: NomupayPaymentStatus,
     pub created_on: String,
@@ -197,7 +197,7 @@ pub struct PaymentResponse {
     pub source_id: String,
     pub destination_id: String,
     pub payment_reference: String,
-    pub amount: String,
+    pub amount: f64,
     pub currency_code: String,
     pub purpose: String,
     pub description: String,
@@ -252,7 +252,7 @@ pub struct NomupayMetadata {
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct NomupayError1{
+pub struct NomupayError1 {
     pub error_code: String,
     pub error_description: String,
 }
@@ -260,7 +260,7 @@ pub struct NomupayError1{
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct NomupayErrorType1 {
-    pub error: NomupayError1
+    pub error: NomupayError1,
 }
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
@@ -272,7 +272,7 @@ pub struct ValidationError {
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct NomupayError2{
+pub struct NomupayError2 {
     pub error_code: String,
     pub validation_errors: Vec<ValidationError>,
 }
@@ -285,7 +285,7 @@ pub struct NomupayErrorType2 {
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct DetailsType{
+pub struct DetailsType {
     pub loc: Vec<String>,
     #[serde(rename = "type")]
     pub typee: String,
@@ -352,7 +352,8 @@ impl TryFrom<&ConnectorAuthType> for NomupayAuthType {
 // PaymentsResponse
 //TODO: Append the remaining status flags
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "lowercase")]
+// #[serde(rename_all = "lowercase")]UPPERCASE
+#[serde(rename_all = "UPPERCASE")]
 pub enum NomupayPaymentStatus {
     Pending,
     Processed,
@@ -368,10 +369,14 @@ pub enum NomupayPaymentStatus {
 impl From<NomupayPaymentStatus> for common_enums::AttemptStatus {
     fn from(item: NomupayPaymentStatus) -> Self {
         match item {
+            NomupayPaymentStatus::Pending => Self::Pending,
             NomupayPaymentStatus::Processed => Self::Charged,
             NomupayPaymentStatus::Failed => Self::Failure,
             NomupayPaymentStatus::Processing => Self::Authorizing,
-            _ => Self::Pending,
+            NomupayPaymentStatus::Scheduled => Self::Pending,
+            NomupayPaymentStatus::PendingAccountActivation => Self::AuthenticationPending,
+            NomupayPaymentStatus::PendingTransferMethodCreation => Self::PaymentMethodAwaited,
+            NomupayPaymentStatus::PendingAccountKyc => Self::AuthenticationPending,
         }
     }
 }
@@ -379,10 +384,14 @@ impl From<NomupayPaymentStatus> for common_enums::AttemptStatus {
 impl From<NomupayPaymentStatus> for PayoutStatus {
     fn from(item: NomupayPaymentStatus) -> Self {
         match item {
+            NomupayPaymentStatus::Pending => Self::Pending,
             NomupayPaymentStatus::Processed => Self::Success,
             NomupayPaymentStatus::Failed => Self::Failed,
             NomupayPaymentStatus::Processing => Self::Pending,
-            _ => Self::Pending,
+            NomupayPaymentStatus::Scheduled => Self::Pending,
+            NomupayPaymentStatus::PendingAccountActivation => Self::Pending,
+            NomupayPaymentStatus::PendingTransferMethodCreation => Self::Pending,
+            NomupayPaymentStatus::PendingAccountKyc => Self::Pending,
         }
     }
 }
@@ -567,7 +576,7 @@ impl<F> TryFrom<&PayoutsRouterData<F>> for OnboardSubAccountRequest {
 
         match payout_type {
             Some(common_enums::PayoutType::Bank) => Ok(Self {
-                account_id: source_id.eid,                       
+                account_id: source_id.eid,
                 client_sub_account_id: request.payout_id, // need help
                 profile,
             }),
@@ -613,7 +622,7 @@ impl<F> TryFrom<&PayoutsRouterData<F>> for OnboardTransferMethodRequest {
                     let bank_account = BankAccount {
                         bank_id: bank_details.bic,
                         account_id: bank_details.iban,
-                        account_purpose: bank_details.bank_name, // savings or somthing else need help
+                        account_purpose: Some("SAVINGS".to_string()), // savings or somthing else need help
                     };
                     // let request = item.request.to_owned();
                     // let payout_type = request.payout_type;
@@ -722,11 +731,12 @@ impl<F> TryFrom<&PayoutsRouterData<F>> for PaymentRequest {
         }?;
         Ok(Self {
             source_id,
-            destination_id: item
-                .response
-                .clone()
-                .map(|i| i.connector_payout_id)
-                .unwrap(),
+            destination_id: item.request.clone().connector_payout_id,
+            // destination_id: item
+            //     .response
+            //     .clone()
+            //     .map(|i| i.connector_payout_id)
+            //     .unwrap(),
             payment_reference: item.request.clone().connector_payout_id,
             amount: item.request.amount,
             currency_code: item.request.destination_currency,
@@ -738,10 +748,12 @@ impl<F> TryFrom<&PayoutsRouterData<F>> for PaymentRequest {
 }
 
 // PoFulfill response
-impl<F> TryFrom<PayoutsResponseRouterData<F, PaymentResponse>> for PayoutsRouterData<F> {
+impl<F> TryFrom<PayoutsResponseRouterData<F, NomupayPaymentResponse>> for PayoutsRouterData<F> {
     type Error = error_stack::Report<errors::ConnectorError>;
-    fn try_from(item: PayoutsResponseRouterData<F, PaymentResponse>) -> Result<Self, Self::Error> {
-        let response: PaymentResponse = item.response;
+    fn try_from(
+        item: PayoutsResponseRouterData<F, NomupayPaymentResponse>,
+    ) -> Result<Self, Self::Error> {
+        let response: NomupayPaymentResponse = item.response;
 
         Ok(Self {
             response: Ok(PayoutsResponseData {

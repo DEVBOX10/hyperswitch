@@ -55,7 +55,11 @@ use masking::{ExposeInterface, Mask};
 use serde_json::json;
 use transformers as nomupay;
 
-use crate::{constants::headers, types::ResponseRouterData, utils::{self, RouterData as RouterDataTrait}};
+use crate::{
+    constants::headers,
+    types::ResponseRouterData,
+    utils::{self, RouterData as RouterDataTrait},
+};
 
 #[derive(Clone)]
 pub struct Nomupay {
@@ -317,7 +321,6 @@ impl ConnectorCommon for Nomupay {
         res: Response,
         event_builder: Option<&mut ConnectorEvent>,
     ) -> CustomResult<ErrorResponse, errors::ConnectorError> {
-
         println!("eeeeeeeeeeeeeeeeeeee{:?}", res);
         let response: nomupay::NomupayErrorResponse = res
             .response
@@ -327,39 +330,32 @@ impl ConnectorCommon for Nomupay {
         event_builder.map(|i| i.set_response_body(&response));
         router_env::logger::info!(connector_response=?response);
 
-        match response{ 
-            nomupay::NomupayErrorResponse::NomupayErrorType1(err)=>{
-                Ok(ErrorResponse {
-                    status_code: res.status_code,
-                    code: err.error.error_code,
-                    message: err.error.error_description,
-                    reason: None,
-                    attempt_status: None,
-                    connector_transaction_id: None,
-                })
-            },
-            nomupay::NomupayErrorResponse::NomupayErrorType2(err)=>{
-                Ok(ErrorResponse {
-                    status_code: res.status_code,
-                    code: err.error.error_code,
-                    message: err.error.validation_errors[0].message.clone(),
-                    reason: Some(err.error.validation_errors[0].field.clone()),
-                    attempt_status: None,
-                    connector_transaction_id: None,
-                })
-            },
-            nomupay::NomupayErrorResponse::NomupayErrorType3(err)=>{
-                Ok(ErrorResponse {
-                    status_code: res.status_code,
-                    code: err.status_code.to_string(),
-                    message: err.detail[0].typee.clone(),
-                    reason: None,
-                    attempt_status: None,
-                    connector_transaction_id: None,
-                })
-            }
+        match response {
+            nomupay::NomupayErrorResponse::NomupayErrorType1(err) => Ok(ErrorResponse {
+                status_code: res.status_code,
+                code: err.error.error_code,
+                message: err.error.error_description,
+                reason: None,
+                attempt_status: None,
+                connector_transaction_id: None,
+            }),
+            nomupay::NomupayErrorResponse::NomupayErrorType2(err) => Ok(ErrorResponse {
+                status_code: res.status_code,
+                code: err.error.error_code,
+                message: err.error.validation_errors[0].message.clone(),
+                reason: Some(err.error.validation_errors[0].field.clone()),
+                attempt_status: None,
+                connector_transaction_id: None,
+            }),
+            nomupay::NomupayErrorResponse::NomupayErrorType3(err) => Ok(ErrorResponse {
+                status_code: res.status_code,
+                code: err.status_code.to_string(),
+                message: err.detail[0].typee.clone(),
+                reason: None,
+                attempt_status: None,
+                connector_transaction_id: None,
+            }),
         }
-        
     }
 }
 
@@ -720,10 +716,10 @@ impl ConnectorIntegration<PoFulfill, PayoutsData, PayoutsResponseData> for Nomup
         event_builder: Option<&mut ConnectorEvent>,
         res: Response,
     ) -> CustomResult<PayoutsRouterData<PoFulfill>, errors::ConnectorError> {
-        let response: nomupay::PaymentResponse =
-            res.response
-                .parse_struct("WiseFulfillResponse")
-                .change_context(errors::ConnectorError::ResponseDeserializationFailed)?;
+        let response: nomupay::NomupayPaymentResponse = res
+            .response
+            .parse_struct("NomupayFulfillResponse")
+            .change_context(errors::ConnectorError::ResponseDeserializationFailed)?;
 
         event_builder.map(|i| i.set_response_body(&response));
         router_env::logger::info!(connector_response=?response);
