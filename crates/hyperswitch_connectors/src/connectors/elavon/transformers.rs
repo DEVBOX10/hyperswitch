@@ -13,7 +13,7 @@ use hyperswitch_domain_models::{
         RefundSyncRouterData, RefundsRouterData,
     },
 };
-use hyperswitch_interfaces::{consts, errors};
+use hyperswitch_interfaces::errors;
 use masking::Secret;
 use serde::{Deserialize, Serialize};
 
@@ -22,7 +22,7 @@ use crate::{
         PaymentsCaptureResponseRouterData, PaymentsSyncResponseRouterData,
         RefundsResponseRouterData, ResponseRouterData,
     },
-    utils::{CardData, ForeignFrom, PaymentsAuthorizeRequestData, RefundsRequestData},
+    utils::{CardData, PaymentsAuthorizeRequestData, RefundsRequestData},
 };
 
 pub struct ElavonRouterData<T> {
@@ -163,7 +163,7 @@ pub struct PaymentResponse {
     ssl_issuer_response: Option<SslIssuerResponse>,
     ssl_result: SslResult,
     ssl_txn_id: String,
-    ssl_result_message: Option<String>,
+    ssl_result_message: String,
 }
 
 impl<F>
@@ -180,11 +180,7 @@ impl<F>
             PaymentsResponseData,
         >,
     ) -> Result<Self, Self::Error> {
-        let status = enums::AttemptStatus::foreign_from((
-            &item.response,
-            item.data.request.is_auto_capture()?,
-        ));
-
+        let status = get_payment_status(&item.response, item.data.request.is_auto_capture()?);
         let response = match &item.response {
             ElavonPaymentsResponse::Error(error) => Err(ErrorResponse {
                 code: error.error_code.clone(),
@@ -197,20 +193,9 @@ impl<F>
             ElavonPaymentsResponse::Success(response) => {
                 if status == enums::AttemptStatus::Failure {
                     Err(ErrorResponse {
-                        code: response
-                            .ssl_result_message
-                            .clone()
-                            .unwrap_or_else(|| "NO_ERROR_CODE".to_string()),
-                        message: response
-                            .ssl_result_message
-                            .clone()
-                            .unwrap_or_else(|| "NO_ERROR_MESSAGE".to_string()),
-                        reason: Some(
-                            response
-                                .ssl_result_message
-                                .clone()
-                                .unwrap_or_else(|| "NO_ERROR_MESSAGE".to_string()),
-                        ),
+                        code: response.ssl_result_message.clone(),
+                        message: response.ssl_result_message.clone(),
+                        reason: Some(response.ssl_result_message.clone()),
                         attempt_status: None,
                         connector_transaction_id: Some(response.ssl_txn_id.clone()),
                         status_code: item.http_code,
@@ -402,8 +387,7 @@ impl TryFrom<PaymentsCaptureResponseRouterData<ElavonPaymentsResponse>>
     fn try_from(
         item: PaymentsCaptureResponseRouterData<ElavonPaymentsResponse>,
     ) -> Result<Self, Self::Error> {
-        let status =
-            enums::AttemptStatus::foreign_from((&item.response, enums::AttemptStatus::Charged));
+        let status = map_payment_status(&item.response, enums::AttemptStatus::Charged);
         let response = match &item.response {
             ElavonPaymentsResponse::Error(error) => Err(ErrorResponse {
                 code: error.error_code.clone(),
@@ -416,20 +400,9 @@ impl TryFrom<PaymentsCaptureResponseRouterData<ElavonPaymentsResponse>>
             ElavonPaymentsResponse::Success(response) => {
                 if status == enums::AttemptStatus::Failure {
                     Err(ErrorResponse {
-                        code: response
-                            .ssl_result_message
-                            .clone()
-                            .unwrap_or_else(|| "NO_ERROR_CODE".to_string()),
-                        message: response
-                            .ssl_result_message
-                            .clone()
-                            .unwrap_or_else(|| "NO_ERROR_MESSAGE".to_string()),
-                        reason: Some(
-                            response
-                                .ssl_result_message
-                                .clone()
-                                .unwrap_or_else(|| "NO_ERROR_MESSAGE".to_string()),
-                        ),
+                        code: response.ssl_result_message.clone(),
+                        message: response.ssl_result_message.clone(),
+                        reason: Some(response.ssl_result_message.clone()),
                         attempt_status: None,
                         connector_transaction_id: None,
                         status_code: item.http_code,
@@ -477,9 +450,9 @@ impl TryFrom<RefundsResponseRouterData<Execute, ElavonPaymentsResponse>>
             ElavonPaymentsResponse::Success(response) => {
                 if status == enums::RefundStatus::Failure {
                     Err(ErrorResponse {
-                        code: consts::NO_ERROR_CODE.to_owned(),
-                        message: consts::NO_ERROR_MESSAGE.to_owned(),
-                        reason: Some(consts::NO_ERROR_MESSAGE.to_owned()),
+                        code: response.ssl_result_message.clone(),
+                        message: response.ssl_result_message.clone(),
+                        reason: Some(response.ssl_result_message.clone()),
                         attempt_status: None,
                         connector_transaction_id: None,
                         status_code: item.http_code,
@@ -523,13 +496,14 @@ impl ElavonResponseValidator for ElavonPaymentsResponse {
     }
 }
 
-impl ForeignFrom<(&ElavonPaymentsResponse, Self)> for enums::AttemptStatus {
-    fn foreign_from((item, success_status): (&ElavonPaymentsResponse, Self)) -> Self {
-        if item.is_successful() {
-            success_status
-        } else {
-            Self::Failure
-        }
+fn map_payment_status(
+    item: &ElavonPaymentsResponse,
+    success_status: enums::AttemptStatus,
+) -> enums::AttemptStatus {
+    if item.is_successful() {
+        success_status
+    } else {
+        enums::AttemptStatus::Failure
     }
 }
 
@@ -572,16 +546,17 @@ impl From<&ElavonSyncResponse> for enums::AttemptStatus {
     }
 }
 
-impl ForeignFrom<(&ElavonPaymentsResponse, bool)> for enums::AttemptStatus {
-    fn foreign_from((item, is_auto_capture): (&ElavonPaymentsResponse, bool)) -> Self {
-        if item.is_successful() {
-            if is_auto_capture {
-                Self::Charged
-            } else {
-                Self::Authorized
-            }
+fn get_payment_status(
+    item: &ElavonPaymentsResponse,
+    is_auto_capture: bool,
+) -> enums::AttemptStatus {
+    if item.is_successful() {
+        if is_auto_capture {
+            enums::AttemptStatus::Charged
         } else {
-            Self::Failure
+            enums::AttemptStatus::Authorized
         }
+    } else {
+        enums::AttemptStatus::Failure
     }
 }

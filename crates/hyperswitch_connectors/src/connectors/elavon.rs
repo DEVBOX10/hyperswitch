@@ -1,5 +1,5 @@
 pub mod transformers;
-use std::{collections::HashMap, fmt::Write, str};
+use std::{collections::HashMap, str};
 
 use common_enums::{CaptureMethod, PaymentMethodType};
 use common_utils::{
@@ -34,9 +34,9 @@ use hyperswitch_interfaces::{
     types::{self, Response},
     webhooks,
 };
+use masking::{Secret, WithoutType};
 use quick_xml::de::from_str;
 use serde::{de::DeserializeOwned, Serialize};
-use serde_json::Value;
 use transformers as elavon;
 
 use crate::{constants::headers, types::ResponseRouterData, utils};
@@ -55,46 +55,20 @@ pub fn parse_struct<T: DeserializeOwned>(xml_data: &[u8]) -> Result<T, errors::C
 
     Ok(result)
 }
-// Generic function to convert struct to XML
 pub fn struct_to_xml<T: Serialize>(
     item: &T,
-) -> Result<HashMap<String, String>, errors::ConnectorError> {
-    let mut xml_string = String::new();
-    xml_string.push_str("<txn>");
-
-    let serialized = serde_json::to_value(item).map_err(|e| {
+) -> Result<HashMap<String, Secret<String, WithoutType>>, errors::ConnectorError> {
+    let xml_content = quick_xml::se::to_string_with_root("txn", &item).map_err(|e| {
         router_env::logger::error!("Error serializing Struct: {:?}", e);
         errors::ConnectorError::ResponseDeserializationFailed
     })?;
 
-    if let Value::Object(map) = serialized {
-        for (key, value) in map {
-            append_value_as_xml(&mut xml_string, &key, &value);
-        }
-    }
-    xml_string.push_str("</txn>");
     let mut result = HashMap::new();
-    result.insert("xmldata".to_string(), xml_string);
+    result.insert(
+        "xmldata".to_string(),
+        Secret::<_, WithoutType>::new(xml_content),
+    );
     Ok(result)
-}
-fn append_value_as_xml(xml_string: &mut String, key: &str, value: &Value) {
-    match value {
-        Value::String(val) => {
-            writeln!(xml_string, "  <{key}>{val}</{key}>").unwrap();
-        }
-        Value::Number(num) => {
-            writeln!(xml_string, "  <{key}>{num}</{key}>").unwrap();
-        }
-        Value::Bool(b) => {
-            writeln!(xml_string, "  <{key}>{}</{key}>", b).unwrap();
-        }
-        Value::Object(_) | Value::Array(_) => {
-            writeln!(xml_string, "  <{key}>...</{key}>").unwrap();
-        }
-        Value::Null => {
-            writeln!(xml_string, "  <{key}></{key}>").unwrap();
-        }
-    }
 }
 #[derive(Clone)]
 pub struct Elavon {
@@ -165,9 +139,7 @@ impl ConnectorCommon for Elavon {
     }
 }
 
-impl ConnectorIntegration<Session, PaymentsSessionData, PaymentsResponseData> for Elavon {
-    //TODO: implement sessions flow
-}
+impl ConnectorIntegration<Session, PaymentsSessionData, PaymentsResponseData> for Elavon {}
 
 impl ConnectorIntegration<AccessTokenAuth, AccessTokenRequestData, AccessToken> for Elavon {}
 
@@ -207,6 +179,7 @@ impl ConnectorIntegration<Authorize, PaymentsAuthorizeData, PaymentsResponseData
 
         let connector_router_data = elavon::ElavonRouterData::from((amount, req));
         let connector_req = elavon::ElavonPaymentsRequest::try_from(&connector_router_data)?;
+        router_env::logger::info!(raw_connector_request=?connector_req);
         Ok(RequestContent::FormUrlEncoded(Box::new(struct_to_xml(
             &connector_req,
         )?)))
@@ -286,6 +259,7 @@ impl ConnectorIntegration<PSync, PaymentsSyncData, PaymentsResponseData> for Ela
         _connectors: &Connectors,
     ) -> CustomResult<RequestContent, errors::ConnectorError> {
         let connector_req = elavon::SyncRequest::try_from(req)?;
+        router_env::logger::info!(raw_connector_request=?connector_req);
         Ok(RequestContent::FormUrlEncoded(Box::new(struct_to_xml(
             &connector_req,
         )?)))
@@ -364,6 +338,7 @@ impl ConnectorIntegration<Capture, PaymentsCaptureData, PaymentsResponseData> fo
         )?;
         let connector_router_data = elavon::ElavonRouterData::from((amount, req));
         let connector_req = elavon::PaymentsCaptureRequest::try_from(&connector_router_data)?;
+        router_env::logger::info!(raw_connector_request=?connector_req);
         Ok(RequestContent::FormUrlEncoded(Box::new(struct_to_xml(
             &connector_req,
         )?)))
@@ -450,6 +425,7 @@ impl ConnectorIntegration<Execute, RefundsData, RefundsResponseData> for Elavon 
 
         let connector_router_data = elavon::ElavonRouterData::from((refund_amount, req));
         let connector_req = elavon::ElavonRefundRequest::try_from(&connector_router_data)?;
+        router_env::logger::info!(raw_connector_request=?connector_req);
         Ok(RequestContent::FormUrlEncoded(Box::new(struct_to_xml(
             &connector_req,
         )?)))
@@ -525,6 +501,7 @@ impl ConnectorIntegration<RSync, RefundsData, RefundsResponseData> for Elavon {
         _connectors: &Connectors,
     ) -> CustomResult<RequestContent, errors::ConnectorError> {
         let connector_req = elavon::SyncRequest::try_from(req)?;
+        router_env::logger::info!(raw_connector_request=?connector_req);
         Ok(RequestContent::FormUrlEncoded(Box::new(struct_to_xml(
             &connector_req,
         )?)))
