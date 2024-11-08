@@ -534,7 +534,12 @@ impl Payments {
                 .service(
                     web::resource("/create-external-sdk-tokens")
                         .route(web::post().to(payments::payments_connector_session)),
+                )
+                .service(
+                    web::resource("/saved-payment-methods")
+                    .route(web::get().to(list_customer_payment_method_for_payment))
                 ),
+
         );
 
         route
