@@ -537,9 +537,8 @@ impl Payments {
                 )
                 .service(
                     web::resource("/saved-payment-methods")
-                    .route(web::get().to(list_customer_payment_method_for_payment))
+                        .route(web::get().to(list_customer_payment_method_for_payment)),
                 ),
-
         );
 
         route
