@@ -483,7 +483,7 @@ mod tests {
             DisputeNew {
                 dispute_id: dispute_ids.dispute_id,
                 amount: "amount".into(),
-                currency: common_enums::Currency::USD,
+                currency: common_enums::Currency::default(),
                 dispute_stage: DisputeStage::Dispute,
                 dispute_status: DisputeStatus::DisputeOpened,
                 payment_id: dispute_ids.payment_id,

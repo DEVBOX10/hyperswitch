@@ -1332,7 +1332,7 @@ impl api::IncomingWebhook for Checkout {
             .change_context(errors::ConnectorError::WebhookBodyDecodingFailed)?;
         Ok(api::disputes::DisputePayload {
             amount: dispute_details.data.amount.to_string(),
-            currency: connector_utils::string_to_currency(dispute_details.data.currency),
+            currency: dispute_details.data.currency,
             dispute_stage: api_models::enums::DisputeStage::from(
                 dispute_details.transaction_type.clone(),
             ),

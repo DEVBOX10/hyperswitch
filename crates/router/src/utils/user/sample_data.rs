@@ -412,7 +412,7 @@ pub async fn generate_sample_data(
                     amount: (amount * 100).to_string(),
                     currency: payment_intent
                         .currency
-                        .unwrap_or(common_enums::Currency::USD),
+                        .unwrap_or_default(),
                     dispute_stage: storage_enums::DisputeStage::Dispute,
                     dispute_status: storage_enums::DisputeStatus::DisputeOpened,
                     payment_id: payment_id.clone(),

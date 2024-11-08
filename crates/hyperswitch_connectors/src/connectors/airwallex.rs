@@ -1074,7 +1074,7 @@ impl IncomingWebhook for Airwallex {
             .change_context(errors::ConnectorError::WebhookBodyDecodingFailed)?;
         Ok(DisputePayload {
             amount: dispute_details.dispute_amount.to_string(),
-            currency: connector_utils::string_to_currency(dispute_details.dispute_currency),
+            currency: dispute_details.dispute_currency,
             dispute_stage: api_models::enums::DisputeStage::from(dispute_details.stage.clone()),
             connector_dispute_id: dispute_details.dispute_id,
             connector_reason: dispute_details.dispute_reason_type,
