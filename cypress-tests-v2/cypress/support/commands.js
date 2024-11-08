@@ -62,10 +62,10 @@ Cypress.Commands.add(
 
       if (response.status === 200) {
         expect(response.body)
-          .to.have.property("organization_id")
+          .to.have.property("id")
           .and.to.include("org_")
           .and.to.be.a("string").and.not.be.empty;
-        globalState.set("organizationId", response.body.organization_id);
+        globalState.set("organizationId", response.body.id);
         cy.task("setGlobalState", globalState.data);
         expect(response.body).to.have.property("metadata").and.to.equal(null);
       } else {
@@ -97,7 +97,7 @@ Cypress.Commands.add("organizationRetrieveCall", (globalState) => {
 
     if (response.status === 200) {
       expect(response.body)
-        .to.have.property("organization_id")
+        .to.have.property("id")
         .and.to.include("org_")
         .and.to.be.a("string").and.not.be.empty;
       expect(response.body.organization_name)
@@ -105,7 +105,7 @@ Cypress.Commands.add("organizationRetrieveCall", (globalState) => {
         .and.to.be.a("string").and.not.be.empty;
 
       if (organization_id === undefined || organization_id === null) {
-        globalState.set("organizationId", response.body.organization_id);
+        globalState.set("organizationId", response.body.id);
         cy.task("setGlobalState", globalState.data);
       }
     } else {
@@ -139,14 +139,14 @@ Cypress.Commands.add(
 
       if (response.status === 200) {
         expect(response.body)
-          .to.have.property("organization_id")
+          .to.have.property("id")
           .and.to.include("org_")
           .and.to.be.a("string").and.not.be.empty;
         expect(response.body).to.have.property("metadata").and.to.be.a("object")
           .and.not.be.empty;
 
         if (organization_id === undefined || organization_id === null) {
-          globalState.set("organizationId", response.body.organization_id);
+          globalState.set("organizationId", response.body.id);
           cy.task("setGlobalState", globalState.data);
         }
       } else {
@@ -167,7 +167,7 @@ Cypress.Commands.add(
     const api_key = globalState.get("adminApiKey");
     const base_url = globalState.get("baseUrl");
     const organization_id = globalState.get("organizationId");
-    const url = `${base_url}/v2/merchant_accounts`;
+    const url = `${base_url}/v2/merchant-accounts`;
 
     const merchant_name = merchantAccountCreateBody.merchant_name
       .replaceAll(" ", "")
@@ -219,7 +219,7 @@ Cypress.Commands.add("merchantAccountRetrieveCall", (globalState) => {
   const api_key = globalState.get("adminApiKey");
   const base_url = globalState.get("baseUrl");
   const merchant_id = globalState.get("merchantId");
-  const url = `${base_url}/v2/merchant_accounts/${merchant_id}`;
+  const url = `${base_url}/v2/merchant-accounts/${merchant_id}`;
 
   cy.request({
     method: "GET",
@@ -265,7 +265,7 @@ Cypress.Commands.add(
     const api_key = globalState.get("adminApiKey");
     const base_url = globalState.get("baseUrl");
     const merchant_id = globalState.get("merchantId");
-    const url = `${base_url}/v2/merchant_accounts/${merchant_id}`;
+    const url = `${base_url}/v2/merchant-accounts/${merchant_id}`;
 
     const merchant_name = merchantAccountUpdateBody.merchant_name;
 
@@ -460,7 +460,7 @@ Cypress.Commands.add(
     const base_url = globalState.get("baseUrl");
     const merchant_id = globalState.get("merchantId");
     const profile_id = globalState.get("profileId");
-    const url = `${base_url}/v2/connector_accounts`;
+    const url = `${base_url}/v2/connector-accounts`;
 
     const customHeaders = {
       "x-merchant-id": merchant_id,
@@ -540,7 +540,7 @@ Cypress.Commands.add("mcaRetrieveCall", (globalState) => {
   const connector_name = globalState.get("connectorId");
   const merchant_connector_id = globalState.get("merchantConnectorId");
   const merchant_id = globalState.get("merchantId");
-  const url = `${base_url}/v2/connector_accounts/${merchant_connector_id}`;
+  const url = `${base_url}/v2/connector-accounts/${merchant_connector_id}`;
 
   const customHeaders = {
     "x-merchant-id": merchant_id,
@@ -594,7 +594,7 @@ Cypress.Commands.add(
     const merchant_connector_id = globalState.get("merchantConnectorId");
     const merchant_id = globalState.get("merchantId");
     const profile_id = globalState.get("profileId");
-    const url = `${base_url}/v2/connector_accounts/${merchant_connector_id}`;
+    const url = `${base_url}/v2/connector-accounts/${merchant_connector_id}`;
 
     const customHeaders = {
       "x-merchant-id": merchant_id,
@@ -655,7 +655,7 @@ Cypress.Commands.add("apiKeyCreateCall", (apiKeyCreateBody, globalState) => {
   // so we set the expiry to tomorrow as new merchant accounts are created with every run
   const expiry = isoTimeTomorrow();
   const merchant_id = globalState.get("merchantId");
-  const url = `${base_url}/v2/api_keys`;
+  const url = `${base_url}/v2/api-keys`;
 
   const customHeaders = {
     "x-merchant-id": merchant_id,
@@ -708,7 +708,7 @@ Cypress.Commands.add("apiKeyRetrieveCall", (globalState) => {
   const base_url = globalState.get("baseUrl");
   const merchant_id = globalState.get("merchantId");
   const api_key_id = globalState.get("apiKeyId");
-  const url = `${base_url}/v2/api_keys/${api_key_id}`;
+  const url = `${base_url}/v2/api-keys/${api_key_id}`;
 
   const customHeaders = {
     "x-merchant-id": merchant_id,
@@ -759,7 +759,7 @@ Cypress.Commands.add("apiKeyUpdateCall", (apiKeyUpdateBody, globalState) => {
   // so we set the expiry to tomorrow as new merchant accounts are created with every run
   const expiry = isoTimeTomorrow();
   const merchant_id = globalState.get("merchantId");
-  const url = `${base_url}/v2/api_keys/${api_key_id}`;
+  const url = `${base_url}/v2/api-keys/${api_key_id}`;
 
   const customHeaders = {
     "x-merchant-id": merchant_id,
@@ -815,7 +815,7 @@ Cypress.Commands.add(
     const api_key = globalState.get("userInfoToken");
     const base_url = globalState.get("baseUrl");
     const profile_id = globalState.get("profileId");
-    const url = `${base_url}/v2/routing_algorithm`;
+    const url = `${base_url}/v2/routing-algorithm`;
 
     // Update request body
     routingSetupBody.algorithm.data = payload.data;
@@ -861,7 +861,7 @@ Cypress.Commands.add(
     const base_url = globalState.get("baseUrl");
     const profile_id = globalState.get("profileId");
     const routing_algorithm_id = globalState.get("routingAlgorithmId");
-    const url = `${base_url}/v2/profiles/${profile_id}/activate_routing_algorithm`;
+    const url = `${base_url}/v2/profiles/${profile_id}/activate-routing-algorithm`;
 
     // Update request body
     routingActivationBody.routing_algorithm_id = routing_algorithm_id;
@@ -899,7 +899,7 @@ Cypress.Commands.add("routingActivationRetrieveCall", (globalState) => {
   const profile_id = globalState.get("profileId");
   const query_params = "limit=10";
   const routing_algorithm_id = globalState.get("routingAlgorithmId");
-  const url = `${base_url}/v2/profiles/${profile_id}/routing_algorithm?${query_params}`;
+  const url = `${base_url}/v2/profiles/${profile_id}/routing-algorithm?${query_params}`;
 
   cy.request({
     method: "GET",
@@ -936,7 +936,7 @@ Cypress.Commands.add("routingDeactivateCall", (globalState) => {
   const base_url = globalState.get("baseUrl");
   const profile_id = globalState.get("profileId");
   const routing_algorithm_id = globalState.get("routingAlgorithmId");
-  const url = `${base_url}/v2/profiles/${profile_id}/deactivate_routing_algorithm`;
+  const url = `${base_url}/v2/profiles/${profile_id}/deactivate-routing-algorithm`;
 
   cy.request({
     method: "PATCH",
@@ -971,7 +971,7 @@ Cypress.Commands.add("routingRetrieveCall", (globalState) => {
   const base_url = globalState.get("baseUrl");
   const profile_id = globalState.get("profileId");
   const routing_algorithm_id = globalState.get("routingAlgorithmId");
-  const url = `${base_url}/v2/routing_algorithm/${routing_algorithm_id}`;
+  const url = `${base_url}/v2/routing-algorithm/${routing_algorithm_id}`;
 
   cy.request({
     method: "GET",
@@ -1010,7 +1010,7 @@ Cypress.Commands.add(
     const base_url = globalState.get("baseUrl");
     const profile_id = globalState.get("profileId");
     const routing_algorithm_id = globalState.get("routingAlgorithmId");
-    const url = `${base_url}/v2/profiles/${profile_id}/fallback_routing`;
+    const url = `${base_url}/v2/profiles/${profile_id}/fallback-routing`;
 
     // Update request body
     routingDefaultFallbackBody = payload;
@@ -1043,7 +1043,7 @@ Cypress.Commands.add("routingFallbackRetrieveCall", (globalState) => {
   const api_key = globalState.get("userInfoToken");
   const base_url = globalState.get("baseUrl");
   const profile_id = globalState.get("profileId");
-  const url = `${base_url}/v2/profiles/${profile_id}/fallback_routing`;
+  const url = `${base_url}/v2/profiles/${profile_id}/fallback-routing`;
 
   cy.request({
     method: "GET",
@@ -1178,7 +1178,7 @@ Cypress.Commands.add("merchantAccountsListCall", (globalState) => {
   const api_key = globalState.get("adminApiKey");
   const base_url = globalState.get("baseUrl");
   const organization_id = globalState.get("organizationId");
-  const url = `${base_url}/v2/organization/${organization_id}/merchant_accounts`;
+  const url = `${base_url}/v2/organization/${organization_id}/merchant-accounts`;
 
   cy.request({
     method: "GET",
@@ -1222,7 +1222,7 @@ Cypress.Commands.add("businessProfilesListCall", (globalState) => {
   const api_key = globalState.get("adminApiKey");
   const base_url = globalState.get("baseUrl");
   const merchant_id = globalState.get("merchantId");
-  const url = `${base_url}/v2/merchant_accounts/${merchant_id}/profiles`;
+  const url = `${base_url}/v2/merchant-accounts/${merchant_id}/profiles`;
 
   const customHeaders = {
     "x-merchant-id": merchant_id,
@@ -1264,7 +1264,7 @@ Cypress.Commands.add("mcaListCall", (globalState, service_type) => {
   const base_url = globalState.get("baseUrl");
   const merchant_id = globalState.get("merchantId");
   const profile_id = globalState.get("profileId");
-  const url = `${base_url}/v2/profiles/${profile_id}/connector_accounts`;
+  const url = `${base_url}/v2/profiles/${profile_id}/connector-accounts`;
 
   const customHeaders = {
     "x-merchant-id": merchant_id,
@@ -1324,7 +1324,7 @@ Cypress.Commands.add("apiKeysListCall", (globalState) => {
   const api_key = globalState.get("adminApiKey");
   const base_url = globalState.get("baseUrl");
   const merchant_id = globalState.get("merchantId");
-  const url = `${base_url}/v2/api_keys/list`;
+  const url = `${base_url}/v2/api-keys/list`;
 
   const customHeaders = {
     "x-merchant-id": merchant_id,
