@@ -677,7 +677,7 @@ impl<F> TryFrom<&PayoutsRouterData<F>> for OnboardTransferMethodRequest {
                         country_code: country_iso2_code,
                         currency_code: item.request.destination_currency,
                         typee: "BANK_ACCOUNT".to_string(),
-                        display_name: item.get_billing_full_name().unwrap(),
+                        display_name: item.get_billing_full_name()?,
                         bank_account,
                         profile,
                     })

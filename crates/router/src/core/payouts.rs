@@ -1340,43 +1340,40 @@ pub async fn create_recipient(
                     // let status = recipient_create_data
                     //     .status // if status present then only update db, for  payout_data.payout_attempt and  payout_data.payouts
                     //     .unwrap_or(api_enums::PayoutStatus::RequiresVendorAccountCreation);
-                    match recipient_create_data.status {
-                        Some(status) => {
-                            let updated_payout_attempt =
-                                storage::PayoutAttemptUpdate::StatusUpdate {
-                                    connector_payout_id: payout_data
-                                        .payout_attempt
-                                        .connector_payout_id
-                                        .to_owned(),
-                                    status,
-                                    error_code: None,
-                                    error_message: None,
-                                    is_eligible: recipient_create_data.payout_eligible,
-                                    unified_code: None,
-                                    unified_message: None,
-                                };
-                            payout_data.payout_attempt = db
-                                .update_payout_attempt(
-                                    &payout_data.payout_attempt,
-                                    updated_payout_attempt,
-                                    &payout_data.payouts,
-                                    merchant_account.storage_scheme,
-                                )
-                                .await
-                                .change_context(errors::ApiErrorResponse::InternalServerError)
-                                .attach_printable("Error updating payout_attempt in db")?;
-                            payout_data.payouts = db
-                                .update_payout(
-                                    &payout_data.payouts,
-                                    storage::PayoutsUpdate::StatusUpdate { status },
-                                    &payout_data.payout_attempt,
-                                    merchant_account.storage_scheme,
-                                )
-                                .await
-                                .change_context(errors::ApiErrorResponse::InternalServerError)
-                                .attach_printable("Error updating payouts in db")?;
-                        }
-                        None => {}
+                    if let Some(status) = recipient_create_data.status {
+                        let updated_payout_attempt =
+                        storage::PayoutAttemptUpdate::StatusUpdate {
+                            connector_payout_id: payout_data
+                                .payout_attempt
+                                .connector_payout_id
+                                .to_owned(),
+                            status,
+                            error_code: None,
+                            error_message: None,
+                            is_eligible: recipient_create_data.payout_eligible,
+                            unified_code: None,
+                            unified_message: None,
+                        };
+                        payout_data.payout_attempt = db
+                            .update_payout_attempt(
+                                &payout_data.payout_attempt,
+                                updated_payout_attempt,
+                                &payout_data.payouts,
+                                merchant_account.storage_scheme,
+                            )
+                            .await
+                            .change_context(errors::ApiErrorResponse::InternalServerError)
+                            .attach_printable("Error updating payout_attempt in db")?;
+                        payout_data.payouts = db
+                            .update_payout(
+                                &payout_data.payouts,
+                                storage::PayoutsUpdate::StatusUpdate { status },
+                                &payout_data.payout_attempt,
+                                merchant_account.storage_scheme,
+                            )
+                            .await
+                            .change_context(errors::ApiErrorResponse::InternalServerError)
+                            .attach_printable("Error updating payouts in db")?;
                     }
                 }
             }

@@ -179,16 +179,35 @@ fn box_to_jwt_payload(
     let str_result = serde_json::to_string(&body);
     let json_str;
     if str_result.is_ok() {
-        json_str = str_result.unwrap();
+        json_str = str_result.map_err(|_e| errors::ConnectorError::GenericError {
+            error_message: "josh error".to_string(),
+            error_object: Value::String("unable to create the body".to_string()),
+        })?;
 
         let map_result: Result<Map<String, Value>, serde_json::Error> =
             serde_json::from_str(&json_str);
-        let parsed_json: Map<String, Value> = map_result.unwrap();
+        let parsed_json: Map<String, Value> = match map_result {
+            Ok(map) => map,
+            Err(_e) => {
+                return Err(errors::ConnectorError::GenericError {
+                    error_message: "josh error".to_string(),
+                    error_object: Value::String("unable to create the body".to_string()),
+                })
+            }
+        };
 
         // Step 3: Use the `from_map` method to populate JwtPayload
         let jwt_payload_result = JwtPayload::from_map(parsed_json);
         if jwt_payload_result.is_ok() {
-            let jwt_payload = jwt_payload_result.unwrap();
+            let jwt_payload = match jwt_payload_result {
+                Ok(payload) => payload,
+                Err(_e) => {
+                    return Err(errors::ConnectorError::GenericError {
+                        error_message: "josh error".to_string(),
+                        error_object: Value::String("unable to create the body".to_string()),
+                    })
+                }
+            };
             return Ok(jwt_payload);
         }
     }
@@ -233,7 +252,15 @@ fn get_signature(
             if header_result.is_err() {
                 return Err(error);
             }
-            let header = header_result.unwrap();
+            let header = match header_result {
+                Ok(header) => header,
+                Err(_e) => {
+                    return Err(errors::ConnectorError::GenericError {
+                        error_message: "josh error".to_string(),
+                        error_object: Value::String("unable to create the header".to_string()),
+                    })
+                }
+            };
 
             //Payload------------------------------------------------------
             let mut sample_payload = JwtPayload::new();
@@ -244,7 +271,15 @@ fn get_signature(
             if payload_result.is_err() {
                 return Err(error);
             }
-            let payload = payload_result.unwrap();
+            let payload = match payload_result {
+                Ok(payload) => payload,
+                Err(_e) => {
+                    return Err(errors::ConnectorError::GenericError {
+                        error_message: "josh error".to_string(),
+                        error_object: Value::String("unable to create the payload".to_string()),
+                    })
+                }
+            };
 
             // let optional_payload = serde_json::to_value(masked_json)
             //         .change_context(errors::ConnectorError::RequestEncodingFailed)?
@@ -255,15 +290,22 @@ fn get_signature(
             let private_key = get_private_key(metadata.to_owned())?;
             // let ES256_signer = JwsSigner::new("ES256")?;
             // Signing JWT------------------------------------------------------
-            let signer;
-            if ES256.signer_from_pem(&private_key).is_err() {
+
+            let signer = if ES256.signer_from_pem(&private_key).is_err() {
                 return Err(errors::ConnectorError::GenericError {
                     error_message: "josh error".to_string(),
-                    error_object: Value::String("ES256 signer failed".to_string()),
+                    error_object: Value::String("unable to create the signer".to_string()),
                 });
-            } else {
-                signer = ES256.signer_from_pem(&private_key).unwrap();
-            }
+            } 
+            else {
+                match ES256.signer_from_pem(&private_key){
+                    Ok(signer) => signer,
+                    Err(_)=> return Err(errors::ConnectorError::GenericError {
+                        error_message: "josh error".to_string(),
+                        error_object: Value::String("unable to create the signer".to_string()),
+                    }),
+                }
+            };
 
             let nomupay_jwt_result = jwt::encode_with_signer(&payload, &header, &signer);
             if nomupay_jwt_result.is_err() {
@@ -272,10 +314,24 @@ fn get_signature(
                     error_object: Value::String("jwt generation failed".to_string()),
                 })
             } else {
-                let nomupay_jwt = nomupay_jwt_result.unwrap();
+                let nomupay_jwt = match nomupay_jwt_result{
+                    Ok(nomupay_jwt) => nomupay_jwt,
+                    Err(_e) => {
+                        return Err(errors::ConnectorError::GenericError {
+                            error_message: "josh error".to_string(),
+                            error_object: Value::String("unable to create the nomupay_jwt".to_string()),
+                        })
+                    }
+                };
 
                 let jws_blocks: Vec<&str> = nomupay_jwt.split('.').collect();
-                let jws_detached = format!("{}..{}", jws_blocks[0], jws_blocks[2]);
+                // let jws_detached = format!("{}..{}", jws_blocks.get[0], jws_blocks[2]);
+                let jws_detached = match (jws_blocks.first(), jws_blocks.get(2)) {
+                    (Some(first), Some(third)) => format!("{}..{}", first, third),
+                    _ => return Err(errors::ConnectorError::MissingRequiredField {
+                        field_name: "JWS blocks not sufficient for detached payload",
+                    }),
+                };
 
                 Ok(jws_detached)
             }
@@ -321,7 +377,6 @@ impl ConnectorCommon for Nomupay {
         res: Response,
         event_builder: Option<&mut ConnectorEvent>,
     ) -> CustomResult<ErrorResponse, errors::ConnectorError> {
-        println!("eeeeeeeeeeeeeeeeeeee{:?}", res);
         let response: nomupay::NomupayErrorResponse = res
             .response
             .parse_struct("NomupayErrorResponse")
@@ -342,15 +397,15 @@ impl ConnectorCommon for Nomupay {
             nomupay::NomupayErrorResponse::NomupayErrorType2(err) => Ok(ErrorResponse {
                 status_code: res.status_code,
                 code: err.error.error_code,
-                message: err.error.validation_errors[0].message.clone(),
-                reason: Some(err.error.validation_errors[0].field.clone()),
+                message: err.error.validation_errors.first().map(|m|m.message.clone()).unwrap_or_default(),
+                reason: Some(err.error.validation_errors.first().map(|m|m.field.clone()).unwrap_or_default()),
                 attempt_status: None,
                 connector_transaction_id: None,
             }),
             nomupay::NomupayErrorResponse::NomupayErrorType3(err) => Ok(ErrorResponse {
                 status_code: res.status_code,
-                code: err.status_code.to_string(),
-                message: err.detail[0].typee.clone(),
+                code: err.detail.get(1).map(|d| d.typee.clone()).unwrap_or_default(), //err.detail[0].typee.clone(),
+                message: err.status_code.to_string(),
                 reason: None,
                 attempt_status: None,
                 connector_transaction_id: None,
@@ -413,10 +468,6 @@ impl ConnectorIntegration<PoRecipient, PayoutsData, PayoutsResponseData> for Nom
         _req: &PayoutsRouterData<PoRecipient>,
         connectors: &Connectors,
     ) -> CustomResult<String, errors::ConnectorError> {
-        println!(
-            "{:?}",
-            format!("{}/v1alpha1/sub-account", connectors.nomupay.base_url)
-        );
         Ok(format!(
             "{}/v1alpha1/sub-account",
             connectors.nomupay.base_url
@@ -468,12 +519,6 @@ impl ConnectorIntegration<PoRecipient, PayoutsData, PayoutsResponseData> for Nom
                 self, req, connectors,
             )?)
             .build();
-
-        println!("######################");
-        println!("{:?}", headers);
-        println!("######################");
-        println!("{:?}", request);
-        println!("######################");
 
         Ok(Some(request))
     }
@@ -598,11 +643,6 @@ impl ConnectorIntegration<PoRecipientAccount, PayoutsData, PayoutsResponseData> 
             )?)
             .build();
 
-        println!("11111111111111111111111");
-        println!("{:?}", headers);
-        println!("11111111111111111111111");
-        println!("{:?}", request);
-        println!("11111111111111111111111");
 
         Ok(Some(request))
     }
@@ -700,12 +740,6 @@ impl ConnectorIntegration<PoFulfill, PayoutsData, PayoutsResponseData> for Nomup
                 self, req, connectors,
             )?)
             .build();
-
-        println!("22222222222222222222222");
-        println!("{:?}", headers);
-        println!("22222222222222222222222");
-        println!("{:?}", request);
-        println!("22222222222222222222222");
 
         Ok(Some(request))
     }
