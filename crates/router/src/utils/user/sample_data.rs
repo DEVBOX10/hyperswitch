@@ -410,9 +410,7 @@ pub async fn generate_sample_data(
                 Some(DisputeNew {
                     dispute_id: common_utils::generate_id_with_default_len("test"),
                     amount: (amount * 100).to_string(),
-                    currency: payment_intent
-                        .currency
-                        .unwrap_or_default(),
+                    currency: payment_intent.currency.unwrap_or_default(),
                     dispute_stage: storage_enums::DisputeStage::Dispute,
                     dispute_status: storage_enums::DisputeStatus::DisputeOpened,
                     payment_id: payment_id.clone(),
