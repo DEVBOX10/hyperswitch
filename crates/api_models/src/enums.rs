@@ -223,7 +223,7 @@ pub enum FieldType {
     UserPixKey,
     UserCpf,
     UserCnpj,
-    UserIban
+    UserIban,
 }
 
 impl FieldType {
