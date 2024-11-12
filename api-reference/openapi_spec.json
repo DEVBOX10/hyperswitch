@@ -10817,18 +10817,6 @@
             "enum": [
               "user_iban"
             ]
-          },
-          {
-            "type": "string",
-            "enum": [
-              "browser_language"
-            ]
-          },
-          {
-            "type": "string",
-            "enum": [
-              "browser_ip"
-            ]
           }
         ],
         "description": "Possible field type of required fields in payment_method_data"

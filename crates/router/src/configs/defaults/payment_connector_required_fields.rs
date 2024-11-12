@@ -2051,24 +2051,6 @@ impl Default for settings::RequiredFields {
                                     common: HashMap::from(
                                         [
                                             (
-                                                "browser_info.language".to_string(),
-                                                RequiredFieldInfo {
-                                                    required_field: "browser_info.language".to_string(),
-                                                    display_name: "browser_info_language".to_string(),
-                                                    field_type: enums::FieldType::BrowserLanguage,
-                                                    value: None,
-                                                }
-                                            ),
-                                            (
-                                                "browser_info.ip_address".to_string(),
-                                                RequiredFieldInfo {
-                                                    required_field: "browser_info.ip_address".to_string(),
-                                                    display_name: "browser_info_ip_address".to_string(),
-                                                    field_type: enums::FieldType::BrowserIp,
-                                                    value: None,
-                                                }
-                                            ),
-                                            (
                                                 "billing.address.line1".to_string(),
                                                 RequiredFieldInfo {
                                                     required_field: "payment_method_data.billing.address.line1".to_string(),
@@ -5263,24 +5245,6 @@ impl Default for settings::RequiredFields {
                                     common: HashMap::from(
                                         [
                                             (
-                                                "browser_info.language".to_string(),
-                                                RequiredFieldInfo {
-                                                    required_field: "browser_info.language".to_string(),
-                                                    display_name: "browser_info_language".to_string(),
-                                                    field_type: enums::FieldType::BrowserLanguage,
-                                                    value: None,
-                                                }
-                                            ),
-                                            (
-                                                "browser_info.ip_address".to_string(),
-                                                RequiredFieldInfo {
-                                                    required_field: "browser_info.ip_address".to_string(),
-                                                    display_name: "browser_info_ip_address".to_string(),
-                                                    field_type: enums::FieldType::BrowserIp,
-                                                    value: None,
-                                                }
-                                            ),
-                                            (
                                                 "billing.address.line1".to_string(),
                                                 RequiredFieldInfo {
                                                     required_field: "payment_method_data.billing.address.line1".to_string(),
@@ -8258,24 +8222,6 @@ impl Default for settings::RequiredFields {
                                         common: HashMap::from(
                                             [
                                                 (
-                                                    "browser_info.language".to_string(),
-                                                    RequiredFieldInfo {
-                                                        required_field: "browser_info.language".to_string(),
-                                                        display_name: "browser_info_language".to_string(),
-                                                        field_type: enums::FieldType::BrowserLanguage,
-                                                        value: None,
-                                                    }
-                                                ),
-                                                (
-                                                    "browser_info.ip_address".to_string(),
-                                                    RequiredFieldInfo {
-                                                        required_field: "browser_info.ip_address".to_string(),
-                                                        display_name: "browser_info_ip_address".to_string(),
-                                                        field_type: enums::FieldType::BrowserIp,
-                                                        value: None,
-                                                    }
-                                                ),
-                                                (
                                                     "billing.address.line1".to_string(),
                                                     RequiredFieldInfo {
                                                         required_field: "payment_method_data.billing.address.line1".to_string(),
@@ -8635,24 +8581,6 @@ impl Default for settings::RequiredFields {
                                         non_mandate: HashMap::new(),
                                         common: HashMap::from(
                                             [
-                                                (
-                                                    "browser_info.language".to_string(),
-                                                    RequiredFieldInfo {
-                                                        required_field: "browser_info.language".to_string(),
-                                                        display_name: "browser_info_language".to_string(),
-                                                        field_type: enums::FieldType::BrowserLanguage,
-                                                        value: None,
-                                                    }
-                                                ),
-                                                (
-                                                    "browser_info.ip_address".to_string(),
-                                                    RequiredFieldInfo {
-                                                        required_field: "browser_info.ip_address".to_string(),
-                                                        display_name: "browser_info_ip_address".to_string(),
-                                                        field_type: enums::FieldType::BrowserIp,
-                                                        value: None,
-                                                    }
-                                                ),
                                                 (
                                                     "billing.address.line1".to_string(),
                                                     RequiredFieldInfo {
@@ -9403,24 +9331,6 @@ impl Default for settings::RequiredFields {
                                         non_mandate: HashMap::new(),
                                         common: HashMap::from(
                                             [
-                                                (
-                                                    "browser_info.language".to_string(),
-                                                    RequiredFieldInfo {
-                                                        required_field: "browser_info.language".to_string(),
-                                                        display_name: "browser_info_language".to_string(),
-                                                        field_type: enums::FieldType::BrowserLanguage,
-                                                        value: None,
-                                                    }
-                                                ),
-                                                (
-                                                    "browser_info.ip_address".to_string(),
-                                                    RequiredFieldInfo {
-                                                        required_field: "browser_info.ip_address".to_string(),
-                                                        display_name: "browser_info_ip_address".to_string(),
-                                                        field_type: enums::FieldType::BrowserIp,
-                                                        value: None,
-                                                    }
-                                                ),
                                                 (
                                                     "billing.address.line1".to_string(),
                                                     RequiredFieldInfo {
