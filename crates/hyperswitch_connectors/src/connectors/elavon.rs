@@ -9,6 +9,7 @@ use common_utils::{
 };
 use error_stack::report;
 use hyperswitch_domain_models::{
+    payment_method_data::PaymentMethodData,
     router_data::{AccessToken, ErrorResponse, RouterData},
     router_flow_types::{
         access_token_auth::AccessTokenAuth,
@@ -35,26 +36,15 @@ use hyperswitch_interfaces::{
     webhooks,
 };
 use masking::{Secret, WithoutType};
-use quick_xml::de::from_str;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::Serialize;
 use transformers as elavon;
 
-use crate::{constants::headers, types::ResponseRouterData, utils};
+use crate::{
+    constants::headers,
+    types::ResponseRouterData,
+    utils::{self, PaymentMethodDataType},
+};
 
-pub fn parse_struct<T: DeserializeOwned>(xml_data: &[u8]) -> Result<T, errors::ConnectorError> {
-    let response_str = str::from_utf8(xml_data)
-        .map_err(|e| {
-            router_env::logger::error!("Error converting response data to UTF-8: {:?}", e);
-            errors::ConnectorError::ResponseDeserializationFailed
-        })?
-        .trim();
-    let result: T = from_str(response_str).map_err(|e| {
-        router_env::logger::error!("Error deserializing XML response: {:?}", e);
-        errors::ConnectorError::ResponseDeserializationFailed
-    })?;
-
-    Ok(result)
-}
 pub fn struct_to_xml<T: Serialize>(
     item: &T,
 ) -> Result<HashMap<String, Secret<String, WithoutType>>, errors::ConnectorError> {
@@ -213,7 +203,8 @@ impl ConnectorIntegration<Authorize, PaymentsAuthorizeData, PaymentsResponseData
         event_builder: Option<&mut ConnectorEvent>,
         res: Response,
     ) -> CustomResult<PaymentsAuthorizeRouterData, errors::ConnectorError> {
-        let response: elavon::ElavonPaymentsResponse = parse_struct(&res.response)?;
+        let response: elavon::ElavonPaymentsResponse =
+            utils::deserialize_xml_to_struct(&res.response)?;
         event_builder.map(|i| i.set_response_body(&response));
         router_env::logger::info!(connector_response=?response);
         RouterData::try_from(ResponseRouterData {
@@ -286,7 +277,7 @@ impl ConnectorIntegration<PSync, PaymentsSyncData, PaymentsResponseData> for Ela
         event_builder: Option<&mut ConnectorEvent>,
         res: Response,
     ) -> CustomResult<PaymentsSyncRouterData, errors::ConnectorError> {
-        let response: elavon::ElavonSyncResponse = parse_struct(&res.response)?;
+        let response: elavon::ElavonSyncResponse = utils::deserialize_xml_to_struct(&res.response)?;
         event_builder.map(|i| i.set_response_body(&response));
         router_env::logger::info!(connector_response=?response);
         RouterData::try_from(ResponseRouterData {
@@ -370,7 +361,8 @@ impl ConnectorIntegration<Capture, PaymentsCaptureData, PaymentsResponseData> fo
         event_builder: Option<&mut ConnectorEvent>,
         res: Response,
     ) -> CustomResult<PaymentsCaptureRouterData, errors::ConnectorError> {
-        let response: elavon::ElavonPaymentsResponse = parse_struct(&res.response)?;
+        let response: elavon::ElavonPaymentsResponse =
+            utils::deserialize_xml_to_struct(&res.response)?;
         event_builder.map(|i| i.set_response_body(&response));
         router_env::logger::info!(connector_response=?response);
         RouterData::try_from(ResponseRouterData {
@@ -456,7 +448,8 @@ impl ConnectorIntegration<Execute, RefundsData, RefundsResponseData> for Elavon 
         event_builder: Option<&mut ConnectorEvent>,
         res: Response,
     ) -> CustomResult<RefundsRouterData<Execute>, errors::ConnectorError> {
-        let response: elavon::ElavonPaymentsResponse = parse_struct(&res.response)?;
+        let response: elavon::ElavonPaymentsResponse =
+            utils::deserialize_xml_to_struct(&res.response)?;
         event_builder.map(|i| i.set_response_body(&response));
         router_env::logger::info!(connector_response=?response);
         RouterData::try_from(ResponseRouterData {
@@ -531,7 +524,7 @@ impl ConnectorIntegration<RSync, RefundsData, RefundsResponseData> for Elavon {
         event_builder: Option<&mut ConnectorEvent>,
         res: Response,
     ) -> CustomResult<RefundSyncRouterData, errors::ConnectorError> {
-        let response: elavon::ElavonSyncResponse = parse_struct(&res.response)?;
+        let response: elavon::ElavonSyncResponse = utils::deserialize_xml_to_struct(&res.response)?;
         event_builder.map(|i| i.set_response_body(&response));
         router_env::logger::info!(connector_response=?response);
         RouterData::try_from(ResponseRouterData {
@@ -587,5 +580,13 @@ impl ConnectorValidation for Elavon {
                 utils::construct_not_implemented_error_report(capture_method, self.id()),
             ),
         }
+    }
+    fn validate_mandate_payment(
+        &self,
+        pm_type: Option<PaymentMethodType>,
+        pm_data: PaymentMethodData,
+    ) -> CustomResult<(), errors::ConnectorError> {
+        let mandate_supported_pmd = std::collections::HashSet::from([PaymentMethodDataType::Card]);
+        utils::is_mandate_supported(pm_data, pm_type, mandate_supported_pmd, self.id())
     }
 }

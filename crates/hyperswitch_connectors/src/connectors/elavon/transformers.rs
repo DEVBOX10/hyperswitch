@@ -1,5 +1,5 @@
 use cards::CardNumber;
-use common_enums::enums;
+use common_enums::{enums, Currency};
 use common_utils::{pii::Email, types::StringMajorUnit};
 use error_stack::ResultExt;
 use hyperswitch_domain_models::{
@@ -7,14 +7,14 @@ use hyperswitch_domain_models::{
     router_data::{ConnectorAuthType, ErrorResponse, RouterData},
     router_flow_types::refunds::{Execute, RSync},
     router_request_types::{PaymentsAuthorizeData, ResponseId},
-    router_response_types::{PaymentsResponseData, RefundsResponseData},
+    router_response_types::{MandateReference, PaymentsResponseData, RefundsResponseData},
     types::{
         PaymentsAuthorizeRouterData, PaymentsCaptureRouterData, PaymentsSyncRouterData,
         RefundSyncRouterData, RefundsRouterData,
     },
 };
 use hyperswitch_interfaces::errors;
-use masking::Secret;
+use masking::{ExposeInterface, Secret};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -22,7 +22,7 @@ use crate::{
         PaymentsCaptureResponseRouterData, PaymentsSyncResponseRouterData,
         RefundsResponseRouterData, ResponseRouterData,
     },
-    utils::{CardData, PaymentsAuthorizeRequestData, RefundsRequestData},
+    utils::{CardData, PaymentsAuthorizeRequestData, RefundsRequestData, RouterData as _},
 };
 
 pub struct ElavonRouterData<T> {
@@ -58,6 +58,7 @@ pub enum SyncTransactionType {
 #[serde(untagged)]
 pub enum ElavonPaymentsRequest {
     Card(CardPaymentRequest),
+    MandatePayment(MandatePaymentRequest),
 }
 #[derive(Debug, Serialize)]
 pub struct CardPaymentRequest {
@@ -70,6 +71,21 @@ pub struct CardPaymentRequest {
     pub ssl_exp_date: Secret<String>,
     pub ssl_cvv2cvc2: Secret<String>,
     pub ssl_email: Email,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ssl_add_token: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ssl_get_token: Option<String>,
+    pub ssl_transaction_currency: Currency,
+}
+#[derive(Debug, Serialize)]
+pub struct MandatePaymentRequest {
+    pub ssl_transaction_type: TransactionType,
+    pub ssl_account_id: Secret<String>,
+    pub ssl_user_id: Secret<String>,
+    pub ssl_pin: Secret<String>,
+    pub ssl_amount: StringMajorUnit,
+    pub ssl_email: Email,
+    pub ssl_token: Secret<String>,
 }
 
 impl TryFrom<&ElavonRouterData<&PaymentsAuthorizeRouterData>> for ElavonPaymentsRequest {
@@ -91,7 +107,28 @@ impl TryFrom<&ElavonRouterData<&PaymentsAuthorizeRouterData>> for ElavonPayments
                 ssl_card_number: req_card.card_number.clone(),
                 ssl_exp_date: req_card.get_expiry_date_as_mmyy()?,
                 ssl_cvv2cvc2: req_card.card_cvc,
-                ssl_email: item.router_data.request.get_email()?,
+                ssl_email: item.router_data.get_billing_email()?,
+                ssl_add_token: match item.router_data.request.is_mandate_payment() {
+                    true => Some("Y".to_string()),
+                    false => None,
+                },
+                ssl_get_token: match item.router_data.request.is_mandate_payment() {
+                    true => Some("Y".to_string()),
+                    false => None,
+                },
+                ssl_transaction_currency: item.router_data.request.currency,
+            })),
+            PaymentMethodData::MandatePayment => Ok(Self::MandatePayment(MandatePaymentRequest {
+                ssl_transaction_type: match item.router_data.request.is_auto_capture()? {
+                    true => TransactionType::CcSale,
+                    false => TransactionType::CcAuthOnly,
+                },
+                ssl_account_id: auth.account_id.clone(),
+                ssl_user_id: auth.user_id.clone(),
+                ssl_pin: auth.pin.clone(),
+                ssl_amount: item.amount.clone(),
+                ssl_email: item.router_data.get_billing_email()?,
+                ssl_token: Secret::new(item.router_data.request.get_connector_mandate_id()?),
             })),
             _ => Err(errors::ConnectorError::NotImplemented("Payment methods".to_string()).into()),
         }
@@ -164,6 +201,7 @@ pub struct PaymentResponse {
     ssl_result: SslResult,
     ssl_txn_id: String,
     ssl_result_message: String,
+    ssl_token: Option<Secret<String>>,
 }
 
 impl<F>
@@ -206,7 +244,15 @@ impl<F>
                             response.ssl_txn_id.clone(),
                         ),
                         redirection_data: Box::new(None),
-                        mandate_reference: Box::new(None),
+                        mandate_reference: Box::new(Some(MandateReference {
+                            connector_mandate_id: response
+                                .ssl_token
+                                .as_ref()
+                                .map(|secret| secret.clone().expose()),
+                            payment_method_id: None,
+                            mandate_metadata: None,
+                            connector_mandate_request_reference_id: None,
+                        })),
                         connector_metadata: None,
                         network_txn_id: None,
                         connector_response_reference_id: None,
